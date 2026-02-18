@@ -20,8 +20,12 @@ class Database:
             f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
 
-        self.engine = create_engine(self.DATABASE_URL)
-
+        self.engine = create_engine(
+            self.DATABASE_URL,
+            pool_size=10,
+            max_overflow=20,
+            pool_pre_ping=True
+        )
         # Use text() for raw SQL
         with self.engine.connect() as conn:
             res = conn.execute(text("SELECT @@hostname, @@port;"))
