@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # Pizza Chatbot
+=======
+# Pizza Chatbot
+>>>>>>> 7b904a8 (Updated order logic and fixed bug)
 
 A bilingual (English & Arabic) AI-powered chatbot API for a pizza restaurant, allowing customers to browse the menu, manage their cart, and place orders through natural conversation.
 

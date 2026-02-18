@@ -44,12 +44,10 @@ class RegexNLPService:
                 {"pattern": r"(new order|start order)", "lang": "en"},
                 {"pattern": r"(طلب جديد|ابدأ طلب)", "lang": "ar"},
             ],
-            # NEW: Confirmation intent for "yes", "ok", "sure" responses
             "confirmation": [
                 {"pattern": r"^(yes|yeah|yep|yup|sure|ok|okay|correct|right|fine|alright|sounds good|that's right)$", "lang": "en"},
                 {"pattern": r"^(نعم|ايوة|ماشي|تمام|صح)$", "lang": "ar"},
             ],
-            # NEW: Rejection intent for "no", "nope" responses  
             "rejection": [
                 {"pattern": r"^(no|nope|nah|not really|incorrect|wrong|cancel that)$", "lang": "en"},
                 {"pattern": r"^(لا|مش صح|غلط)$", "lang": "ar"},
@@ -76,7 +74,6 @@ class RegexNLPService:
             "ar": []
         }
         
-        # NEW: Text number to digit mapping
         self.text_numbers = {
             "en": {
                 "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
@@ -156,10 +153,11 @@ class RegexNLPService:
     def parse_multi_items(self, text: str) -> list:
         """
         Parse multi-item text into list of items
-        
+
         "1fries 2cola" → [{"item": "fries", "quantity": 1}, {"item": "cola", "quantity": 2}]
         "1 fries 2 cola" → [{"item": "fries", "quantity": 1}, {"item": "cola", "quantity": 2}]
         "fries and cola" → [{"item": "fries", "quantity": 1}, {"item": "cola", "quantity": 1}]
+        "one fries and 2 cola" → [{"item": "fries", "quantity": 1}, {"item": "cola", "quantity": 2}]
         """
         items = []
         text = text.lower().strip()
@@ -173,7 +171,6 @@ class RegexNLPService:
             for qty_str, item_name in matches:
                 item_name = item_name.strip()
                 if item_name:
-                    # Extract size from item name
                     size, clean_name = self.extract_size(item_name)
                     clean_name = self.clean_item_name(clean_name)
                     if clean_name:
@@ -192,14 +189,20 @@ class RegexNLPService:
                 if not part:
                     continue
                 
-                # Extract quantity
+                # Try numeric quantity first: "2 cola"
                 qty_match = re.match(r'^(\d+)\s*(.+)$', part)
                 if qty_match:
                     qty = int(qty_match.group(1))
                     item_text = qty_match.group(2)
                 else:
-                    qty = 1
-                    item_text = part
+                    # Try word number: "one fries" → qty=1, item_text="fries"
+                    text_qty, remaining = self.convert_text_number_to_digit(part, "en")
+                    if text_qty:
+                        qty = text_qty
+                        item_text = remaining
+                    else:
+                        qty = 1
+                        item_text = part
                 
                 # Extract size
                 size, clean_name = self.extract_size(item_text)
@@ -251,24 +254,23 @@ class RegexNLPService:
                         if self.is_multi_item(full_input):
                             batch_items = self.parse_multi_items(full_input)
                             if len(batch_items) >= 2:
-                                # Return special multi-item result
                                 return {
                                     "intent": "add_item",
                                     "lang": detected_lang,
                                     "entities": entities,
-                                    "batch_items": batch_items,  # Key field!
+                                    "batch_items": batch_items,
                                     "source": "regex",
                                     "confidence": 1.0
                                 }
                         
-                        # NEW: Convert text numbers to digits: "one cola" → 1, "cola"
+                        # Convert text numbers to digits: "one cola" → 1, "cola"
                         text_qty, remaining_text = self.convert_text_number_to_digit(full_input, detected_lang)
                         if text_qty:
                             entities["quantity"] = text_qty
                             full_input = remaining_text
                         
                         # Single item: extract quantity (handles "2cola" and "2 cola")
-                        if not text_qty:  # Only check numeric if no text number found
+                        if not text_qty:
                             quantity_match = re.match(r'^(\d+)\s*([a-z].+)$', full_input)
                             if quantity_match:
                                 entities["quantity"] = int(quantity_match.group(1))

@@ -15,8 +15,15 @@ class MultiItemParser:
     - "add 1 fries 2 cola" → [{"item": "fries", "quantity": 1}, {"item": "cola", "quantity": 2}]
     - "add large pizza and fries" → [{"item": "pizza", "size": "L"}, {"item": "fries"}]
     - "add 2 large margherita and 3 cola" → [{"item": "margherita", "size": "L", "quantity": 2}, {"item": "cola", "quantity": 3}]
+    - "add one fries and 2 cola" → [{"item": "fries", "quantity": 1}, {"item": "cola", "quantity": 2}]
     """
-    
+
+    WORD_TO_NUM = {
+        "one": "1", "two": "2", "three": "3", "four": "4",
+        "five": "5", "six": "6", "seven": "7", "eight": "8",
+        "nine": "9", "ten": "10"
+    }
+
     def __init__(self):
         # Size patterns
         self.size_patterns = {
@@ -28,7 +35,13 @@ class MultiItemParser:
         
         # Common separators
         self.separators = ["and", "with", ",", "&"]
-    
+
+    def _normalize_word_numbers(self, text: str) -> str:
+        """Convert word numbers to digits: 'one fries' → '1 fries'"""
+        for word, digit in self.WORD_TO_NUM.items():
+            text = re.sub(rf'\b{word}\b', digit, text)
+        return text
+
     def parse(self, text: str) -> List[Dict[str, Any]]:
         """
         Parse text into multiple items
@@ -40,6 +53,9 @@ class MultiItemParser:
         
         # Remove common starting phrases
         text = re.sub(r"^(add|order|i want|get me|give me)\s+", "", text)
+
+        # Normalize word numbers to digits before any parsing
+        text = self._normalize_word_numbers(text)
         
         # Try different parsing strategies
         items = []
@@ -154,7 +170,8 @@ class MultiItemParser:
         Check if text contains multiple items
         """
         text = text.lower()
-        
+        text = self._normalize_word_numbers(text)  # normalize before checking
+
         # Check for number patterns (1 fries 2 cola)
         number_count = len(re.findall(r'\d+', text))
         if number_count >= 2:
@@ -179,6 +196,8 @@ if __name__ == "__main__":
         "pizza, cola, fries",
         "2 large margherita and 3 cola",
         "1 small hot dog pizza 2 fries 3 cola",
+        "one fries and 2 cola",        # word number fix
+        "two large pizza and one cola", # word number fix
     ]
     
     print("🧪 Multi-Item Parser Tests\n")

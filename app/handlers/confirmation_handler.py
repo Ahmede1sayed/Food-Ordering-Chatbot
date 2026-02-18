@@ -1,7 +1,7 @@
 # app/handlers/confirmation_handler.py
 from sqlalchemy.orm import Session
 from app.core.intent_handler import IntentHandler
-from app.core.conversation_context import ConversationContext
+from app.core.enhanced_conversation_context import ConversationContext
 from app.services.cart_service import CartService
 from app.services.menu_service import MenuService
 from datetime import datetime, timedelta

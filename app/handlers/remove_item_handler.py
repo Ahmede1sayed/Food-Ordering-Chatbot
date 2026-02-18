@@ -1,7 +1,7 @@
 # app/handlers/remove_item_handler.py (WITH DEBUG LOGGING)
 from sqlalchemy.orm import Session
 from app.core.intent_handler import IntentHandler
-from app.core.conversation_context import ConversationContext
+from app.core.enhanced_conversation_context import ConversationContext
 from app.services.cart_service import CartService
 import re
 

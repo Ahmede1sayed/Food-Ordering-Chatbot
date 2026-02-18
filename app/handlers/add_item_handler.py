@@ -1,7 +1,7 @@
 # app/handlers/add_item_handler.py (ENHANCED WITH SUGGESTIONS)
 from sqlalchemy.orm import Session
 from app.core.intent_handler import IntentHandler
-from app.core.conversation_context import ConversationContext
+from app.core.enhanced_conversation_context import ConversationContext
 from app.services.item_validation_service import ItemValidationService
 from app.services.cart_service import CartService
 from app.services.suggestion_service import SuggestionService

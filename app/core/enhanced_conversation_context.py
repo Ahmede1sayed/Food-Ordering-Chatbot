@@ -53,10 +53,11 @@ class ConversationContext:
     """
     # ===== User & Session Info =====
     user_id: int
+    user_message: str
+
     session_id: Optional[str] = None
     
     # ===== Current Message =====
-    user_message: str
     detected_language: str = "en"
     
     # ===== NLP Results =====
